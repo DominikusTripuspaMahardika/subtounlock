@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ViVienDo Unlock Save Data</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", sans-serif;
+        background: black;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .unlock-container {
+        background: rgba(0, 0, 0, 0);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .unlock-container h1 {
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
+
+      .unlock-container p {
+        font-size: 16px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-bottom: 15px;
+        transition: background 0.3s ease;
+      }
+
+      #btnSubscribe {
+        background: #ff0000;
+        color: #fff;
+      }
+
+      #btnSubscribe:hover {
+        background: #cc0000;
+      }
+
+      #btnSubscribe.subscribed {
+        background: #6c757d;
+        color: #ccc;
+        cursor: not-allowed;
+        position: relative;
+      }
+
+      #btnSubscribe.subscribed::after {
+        content: " ✓";
+        color: #00ff00;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+
+      #btnUnlock {
+        background: #6c757d;
+        color: #ccc;
+        cursor: not-allowed;
+      }
+
+      #btnUnlock.active {
+        background: #28a745;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      #btnUnlock.active:hover {
+        background: #218838;
+      }
+
+      #btnUnlock:disabled {
+        cursor: not-allowed;
+      }
+
+      #countdown {
+        margin-top: 15px;
+        font-size: 16px;
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #222;
+        color: #fff;
+        padding: 12px 25px;
+        border-radius: 30px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+        z-index: 999;
+      }
+
+      .social-bubbles {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .bubble {
+        width: 55px;
+        height: 55px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #222;
+        color: #fff;
+        font-size: 1.6rem;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        transition: transform 0.3s ease, background-color 0.3s ease;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .bubble:hover {
+        transform: scale(1.1);
+      }
+
+      .bubble.youtube {
+        background-color: #ff0000;
+      }
+
+      .bubble.telegram {
+        background-color: #0088cc;
+      }
+
+      .bubble.youtube:hover {
+        background-color: #cc0000;
+      }
+
+      .bubble.telegram:hover {
+        background-color: #0075b4;
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-4px);
+        }
+        100% {
+          transform: translateY(0);
+        }
+      }
+
+      #matrixRain {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        background: black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="matrixRain"></canvas>
+    <!-- Bubble Sosial -->
+    <div class="social-bubbles">
+      <a
+        href="https://www.youtube.com/@ViVienDoChannel"
+        class="bubble youtube"
+        target="_blank"
+        aria-label="Kunjungi YouTube ViVienDoChannel"
+      >
+        <i class="fab fa-youtube"></i>
+      </a>
+      <a
+        href="https://t.me/viviendochannel"
+        class="bubble telegram"
+        target="_blank"
+        aria-label="Bergabung dengan Telegram ViVienDoChannel"
+      >
+        <i class="fab fa-telegram-plane"></i>
+      </a>
+    </div>
+    <div class="unlock-container">
+      <h1>🎁 Dapatkan Data Gratis!</h1>
+      <p>
+        Subscribe ke channel YouTube kami lalu klik tombol di bawah untuk
+        membuka tautan unduhan Save Data Gratis-nya.
+      </p>
+      <button id="btnSubscribe">
+        <i class="fab fa-youtube"></i> Subscribe ViVienDoChannel
+      </button>
+      <button id="btnUnlock" disabled>
+        <i class="fas fa-download"></i> Unduh Save Data Gratis
+      </button>
+      <p id="countdown"></p>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script>
+      const btnSubscribe = document.getElementById("btnSubscribe");
+      const btnUnlock = document.getElementById("btnUnlock");
+      const countdown = document.getElementById("countdown");
+      const toast = document.getElementById("toast");
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.style.opacity = "1";
+        setTimeout(() => {
+          toast.style.opacity = "0";
+        }, 3000);
+      }
+
+      btnSubscribe.addEventListener("click", () => {
+        // Buka link YouTube di tab baru
+        window.open("https://www.youtube.com/@ViVienDoChannel");
+
+        // Disable tombol dan ubah tampilan
+        btnSubscribe.classList.add("subscribed");
+        btnSubscribe.disabled = true;
+
+        // Aktifkan tombol Unlock
+        btnUnlock.disabled = false;
+        btnUnlock.classList.add("active");
+
+        showToast("Terimakasih!");
+      });
+
+      btnUnlock.addEventListener("click", () => {
+        if (btnUnlock.disabled) return;
+
+        btnUnlock.disabled = true;
+        btnUnlock.classList.remove("active");
+        let timeLeft = 5;
+        countdown.textContent = `Mengalihkan dalam ${timeLeft} detik...`;
+
+        const interval = setInterval(() => {
+          timeLeft--;
+          countdown.textContent = `Mengalihkan dalam ${timeLeft} detik...`;
+
+          if (timeLeft <= 0) {
+            clearInterval(interval);
+            showToast("Sukses!");
+            setTimeout(() => {
+              window.location.href =
+                "https://www.mediafire.com/file/7yhe18p7syq3a0v/Save+Data+Takat+by+ViVienDoChannel.zip/file";
+            }, 1000);
+          }
+        }, 1000);
+      });
+
+      const canvas = document.getElementById("matrixRain");
+      const ctx = canvas.getContext("2d");
+
+      // Ukuran canvas sesuai layar
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      // Karakter Matrix (Katakana + Latin + Angka)
+      const letters =
+        "アァイィウウェエオカサタナハマヤラワ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(
+          ""
+        );
+
+      // Ukuran font dan jumlah kolom
+      const fontSize = 16;
+      const columns = canvas.width / fontSize;
+
+      // Menyimpan posisi y untuk setiap kolom
+      const drops = Array.from(
+        { length: Math.floor(columns) },
+        () => Math.random() * canvas.height
+      );
+
+      function drawMatrix() {
+        // Buat efek fading
+        ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = "#0F0"; // Warna teks hijau
+        ctx.font = fontSize + "px monospace";
+
+        for (let i = 0; i < drops.length; i++) {
+          const text = letters[Math.floor(Math.random() * letters.length)];
+          const x = i * fontSize;
+          const y = drops[i] * fontSize;
+
+          ctx.fillText(text, x, y);
+
+          // Reset ke atas jika sudah melewati layar atau secara acak
+          if (y > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+          }
+
+          drops[i]++;
+        }
+      }
+
+      setInterval(drawMatrix, 33); // ~30fps
+
+      // Update ukuran canvas saat resize
+      window.addEventListener("resize", () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      });
+    </script>
+  </body>
+</html>
